@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kindle Drop
+GenericName=Kindle Sideloader
+Comment=Sideload, download, and manage books on a jailbroken Kindle over USBnet
+Exec=kindle-drop
+Icon=kindle-drop
+Terminal=false
+Categories=Network;FileTransfer;
+Keywords=kindle;ebook;epub;mobi;azw3;sideload;ssh;scp;
+StartupWMClass=kindle-drop
+StartupNotify=true
