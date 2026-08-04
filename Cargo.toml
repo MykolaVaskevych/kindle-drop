@@ -3,6 +3,11 @@ name = "kindle-drop"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+# Statically link OpenSSL instead of using the system one. Used for the release
+# binaries so a single build runs on distros shipping either OpenSSL 1.1 or 3.
+vendored-openssl = ["ssh2/vendored-openssl"]
+
 [dependencies]
 anyhow = "1.0.104"
 dirs = "6.0.0"

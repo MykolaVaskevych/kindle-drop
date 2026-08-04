@@ -47,6 +47,25 @@ scp -O * root@192.168.15.244:/mnt/us/documents/
 
 Both steps are now buttons.
 
+## Install
+
+Grab the latest tarball from [Releases](https://github.com/MykolaVaskevych/kindle-drop/releases)
+and run the installer — it drops the binary, icon, and desktop entry under `~/.local`, no root
+needed:
+
+```sh
+tar xzf kindle-drop-*-x86_64-linux.tar.gz
+cd kindle-drop-*-x86_64-linux
+./install.sh
+```
+
+The prebuilt binary is x86_64 Linux with OpenSSL statically linked, so it runs on any
+reasonably current distro. `./uninstall.sh` removes it again. Building from source works too —
+see below.
+
+Linux only: bringing the USB-net link up relies on `/sys/class/net`, `pkexec`, and `ip`, so
+there's no Windows or macOS build.
+
 ## Requirements
 
 - Rust (2021+) and a jailbroken Kindle with **USB networking** enabled.
