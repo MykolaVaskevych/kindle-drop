@@ -2,6 +2,7 @@
 name = "kindle-drop"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 
 [features]
 # Statically link OpenSSL instead of using the system one. Used for the release

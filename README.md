@@ -81,6 +81,11 @@ cargo build --release
 ./target/release/kindle-drop
 ```
 
+To reproduce the release artifacts (portable binary + tarball in `dist/`), run
+`packaging/build-release.sh --container` — it builds inside Debian bullseye via docker so
+the result isn't tied to your distro's glibc. CI runs the same script on tag pushes; see
+`.github/workflows/release.yml`.
+
 ## Usage
 
 1. Plug the Kindle in with USB networking on.
@@ -114,3 +119,7 @@ download folder under **⚙ Settings**. Config is stored at
 - Deleting a book also removes its `<name>.sdr` sidecar directory.
 - If a transfer fails, the row shows the error and the rest of the queue continues; press
   **Send** again to retry the failed items.
+
+## License
+
+[MIT](LICENSE).

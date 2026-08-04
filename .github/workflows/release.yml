@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and publish (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build portable binary
+    runs-on: ubuntu-latest
+    # Debian bullseye ships glibc 2.31, which keeps the binary usable on
+    # Ubuntu 20.04 / Debian 11 and newer. The image already has perl, make,
+    # gcc, pkg-config and zlib headers, so there is no apt-get to break when
+    # bullseye leaves LTS.
+    container: rust:bullseye
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Check the tag matches Cargo.toml
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          version="$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)"
+          if [ "$tag" != "v$version" ]; then
+            echo "::error::tag $tag does not match Cargo.toml version $version"
+            exit 1
+          fi
+
+      - name: Build and package
+        run: packaging/build-release.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" \
+              --title "Kindle Drop ${tag#v}" \
+              --generate-notes \
+              dist/*
+          fi
