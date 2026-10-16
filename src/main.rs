@@ -43,6 +43,7 @@ fn main() -> eframe::Result {
     // Headless mode:  kindle-drop --send <file>...
     let args: Vec<String> = std::env::args().collect();
     if let Some(pos) = args.iter().position(|a| a == "--send") {
+        attach_parent_console();
         let cfg = Config::load();
         let paths: Vec<PathBuf> = args[pos + 1..].iter().map(PathBuf::from).collect();
         if paths.is_empty() {
@@ -71,6 +72,21 @@ fn main() -> eframe::Result {
         }),
     )
 }
+
+/// Release builds on Windows use the GUI subsystem, so they start without a
+/// console; borrow the launching terminal's so `--send` output is visible.
+#[cfg(windows)]
+fn attach_parent_console() {
+    const ATTACH_PARENT_PROCESS: u32 = u32::MAX;
+    unsafe extern "system" {
+        fn AttachConsole(process_id: u32) -> i32;
+    }
+    // SAFETY: plain Win32 call; failure (no parent console) is harmless.
+    unsafe { AttachConsole(ATTACH_PARENT_PROCESS) };
+}
+
+#[cfg(not(windows))]
+fn attach_parent_console() {}
 
 /// Cohesive dark theme applied to both theme slots so it holds regardless of the
 /// system light/dark preference.
@@ -242,7 +258,7 @@ impl App {
             .count()
     }
 
-    /// Bring up the USB link (via polkit) and verify SSH reachability, off-thread.
+    /// Bring up the USB link (polkit / UAC prompt) and verify SSH reachability, off-thread.
     fn start_connect(&mut self, ctx: &egui::Context) {
         let iface = self
             .selected_iface
@@ -262,7 +278,7 @@ impl App {
                 ctx.request_repaint();
             };
             // Already reachable? Skip the privileged network step entirely — no
-            // polkit prompt when you're effectively already connected.
+            // privilege prompt when you're effectively already connected.
             if netsetup::reachable(&cfg.kindle_ip, 22, Duration::from_millis(700)) {
                 set(ConnState::Connected);
                 return;

@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build portable binary
+    name: Build Linux binary
     runs-on: ubuntu-latest
     # Debian bullseye ships glibc 2.31, which keeps the binary usable on
     # Ubuntu 20.04 / Debian 11 and newer. The image already has perl, make,
@@ -40,18 +40,48 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-linux
+          path: dist/
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install WiX
+        run: dotnet tool install --global wix --version 5.0.2
+
+      - name: Build and package
+        shell: pwsh
+        run: packaging/windows/build-msi.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-windows
           path: dist/
           if-no-files-found: error
 
   publish:
     name: Publish release
-    needs: build
+    needs: [build, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: dist
+          pattern: dist-*
+          merge-multiple: true
           path: dist
 
       - name: Create or update the release

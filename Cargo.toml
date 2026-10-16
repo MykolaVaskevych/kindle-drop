@@ -1,6 +1,6 @@
 [package]
 name = "kindle-drop"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 
@@ -8,6 +8,9 @@ license = "MIT"
 # Statically link OpenSSL instead of using the system one. Used for the release
 # binaries so a single build runs on distros shipping either OpenSSL 1.1 or 3.
 vendored-openssl = ["ssh2/vendored-openssl"]
+# Windows release build: libssh2 on vendored OpenSSL (instead of WinCNG), so the
+# SSH algorithms on offer match the Linux build.
+windows-release = ["vendored-openssl", "ssh2/openssl-on-win32"]
 
 [dependencies]
 anyhow = "1.0.104"
@@ -18,3 +21,6 @@ rfd = "0.17.2"
 serde = { version = "1.0.229", features = ["derive"] }
 ssh2 = "0.9.6"
 toml = "1.1.4"
+
+[build-dependencies]
+winresource = "0.1.34"
